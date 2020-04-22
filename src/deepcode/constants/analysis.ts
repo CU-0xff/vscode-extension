@@ -24,7 +24,9 @@ export const IGNORE_ISSUE_ACTION_NAME: string =
 export const FILE_IGNORE_ACTION_NAME: string =
   "Ignore this suggestion in current file (DeepCode)";
 export const IGNORE_TIP_FOR_USER: string =
-  "To ignore this issue for DeepCode choose 'Ignore this issue' in QuickFix dropdown";
+  "DeepCode: To ignore this issue or export suggestion, open QuickFix dropdown";
+export const COMMUNITY_EXPORT_SUGGESTION_ACTION_NAME: string =
+  "Export this issue to clipboard (DeepCode)";
 
 export const ISSUES_MARKERS_DECORATION_TYPE: { [key: string]: string } = {
   border: "1px",

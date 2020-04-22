@@ -7,11 +7,13 @@ import {
 import {
   IGNORE_ISSUE_ACTION_NAME,
   FILE_IGNORE_ACTION_NAME,
-  IGNORE_ISSUE_BASE_COMMENT_TEXT
+  IGNORE_ISSUE_BASE_COMMENT_TEXT,
+  COMMUNITY_EXPORT_SUGGESTION_ACTION_NAME
 } from "../../../constants/analysis";
 import {
   DEEPCODE_IGNORE_ISSUES_COMMAND,
-  VSCODE_ADD_COMMENT_COMMAND
+  VSCODE_ADD_COMMENT_COMMAND,
+  DEEPCODE_COMMUNITY_EXPORT_SUGGESTION_COMMAND
 } from "../../../constants/commands";
 
 export class DeepCodeIssuesActionProvider implements vscode.CodeActionProvider {
@@ -28,7 +30,25 @@ export class DeepCodeIssuesActionProvider implements vscode.CodeActionProvider {
   ) {
     this.issuesList = issuesList;
     this.registerIgnoreIssuesCommand();
+    this.registerCommunityExportSuggestionCommand();
     this.findSuggestionId = callbacks.findSuggestionId;
+  }
+
+  // Community Addition
+  private registerCommunityExportSuggestionCommand() {
+    vscode.commands.registerCommand(
+      DEEPCODE_COMMUNITY_EXPORT_SUGGESTION_COMMAND,
+       ({
+        currentEditor,
+        issueText,
+        matchedIssue
+      }: {
+        currentEditor: vscode.TextEditor;
+        matchedIssue: vscode.Diagnostic;
+        issueText: string;
+      }): void => { 
+        return; }
+    )
   }
 
   private registerIgnoreIssuesCommand() {
@@ -112,6 +132,39 @@ export class DeepCodeIssuesActionProvider implements vscode.CodeActionProvider {
     return text;
   }
 
+  private createExportIssueAction({
+    document,
+    matchedIssue,
+    isFileIgnore
+  }: {
+    document: vscode.TextDocument;
+    matchedIssue: vscode.Diagnostic;
+    isFileIgnore?: boolean;
+  }): vscode.CodeAction {
+    const exportIssueAction = new vscode.CodeAction(
+      COMMUNITY_EXPORT_SUGGESTION_ACTION_NAME,
+      DeepCodeIssuesActionProvider.providedCodeActionKinds[0]
+    );
+   const issueFullId: string = this.findSuggestionId(
+      matchedIssue.message,
+      document.uri.fsPath
+    );
+    const issueNameForComment: string = extractIssueNameOutOfId(issueFullId);
+    const issueText: string = ignoreIssueCommentText(
+      issueNameForComment,
+      isFileIgnore
+    );
+
+    exportIssueAction.command = {
+      command: DEEPCODE_COMMUNITY_EXPORT_SUGGESTION_COMMAND,
+      title: DEEPCODE_COMMUNITY_EXPORT_SUGGESTION_COMMAND,
+      arguments: [{ issueText, matchedIssue }]
+    };
+
+    return exportIssueAction;
+  }
+
+  
   private createIgnoreIssueAction({
     document,
     matchedIssue,
@@ -161,8 +214,10 @@ export class DeepCodeIssuesActionProvider implements vscode.CodeActionProvider {
         ...codeActionParams,
         isFileIgnore: true
       });
+      const exportIssueAction = this.createExportIssueAction(codeActionParams);
+
       // returns list of actions, all new actions should be added to this list
-      return [ignoreIssueAction, fileIgnoreIssueAction];
+      return [ignoreIssueAction, fileIgnoreIssueAction, exportIssueAction];
     }
   }
 }
