@@ -47,6 +47,37 @@ export class DeepCodeIssuesActionProvider implements vscode.CodeActionProvider {
         matchedIssue: vscode.Diagnostic;
         issueText: string;
       }): void => { 
+        const editor: vscode.TextEditor | undefined =
+          currentEditor || vscode.window.activeTextEditor;
+        if (!editor || !issueText || !matchedIssue) {
+          return;
+        }
+
+        const startLine = (matchedIssue.range.start.line - 5 < 0) ? 0 : matchedIssue.range.start.line - 5;
+        const endLine = (matchedIssue.range.end.line + 5 >= editor.document.lineCount) ? editor.document.lineCount-1 : matchedIssue.range.end.line + 5;
+        
+        let codeSnippet : string = "";
+
+        for(let i = startLine; i <= endLine; i++) {
+            codeSnippet += `${i}: ${editor.document.lineAt(i).text} \n`;
+        }
+
+        vscode.env.clipboard.writeText(`
+    ## DeepCode Suggestion ##
+Current file: 
+          ${editor.document.fileName}
+Issue Text:
+          ${matchedIssue.message}
+Current Line:
+          ${matchedIssue.range.start.line}
+        
+Code Snippet:
+${codeSnippet}
+`
+        );
+
+        //
+        //Here needs to go the payload
         return; }
     )
   }
